@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>For Emjey</title>
+
+<!-- Aesthetic + Readable Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --accent:#ff8fb1;
+  --bg1:#ffeaf2;
+  --bg2:#f3e8ff;
+}
+
+*{
+  box-sizing:border-box;
+  font-family:'Inter',system-ui,sans-serif;
+}
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:linear-gradient(135deg,var(--bg1),var(--bg2));
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* FLOATING HEARTS */
+.hearts{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:0;
+}
+.heart{
+  position:absolute;
+  font-size:18px;
+  animation:floatUp 12s linear infinite;
+  opacity:.6;
+}
+@keyframes floatUp{
+  from{transform:translateY(100vh) scale(.8)}
+  to{transform:translateY(-10vh) scale(1.3)}
+}
+
+/* SPARKLES */
+.sparkle{
+  position:fixed;
+  font-size:20px;
+  animation:spark 1.2s ease forwards;
+  pointer-events:none;
+  z-index:20;
+}
+@keyframes spark{
+  0%{transform:scale(0);opacity:0}
+  50%{opacity:1}
+  100%{transform:translateY(-80px) scale(1.4);opacity:0}
+}
+
+/* MAIN */
+.container{
+  width:100%;
+  max-width:390px;
+  padding:16px;
+  text-align:center;
+  z-index:1;
+}
+
+.card{
+  background:rgba(255,255,255,.96);
+  border-radius:28px;
+  padding:24px;
+  box-shadow:0 20px 40px rgba(255,143,177,.25);
+  animation:fadeIn .9s ease;
+}
+
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:none}
+}
+
+h2,h3{
+  font-family:'Playfair Display',serif;
+  font-weight:600;
+  font-size:30px;
+  margin:10px 0;
+}
+
+/* INPUT + BUTTON */
+input,button{
+  width:100%;
+  padding:16px;
+  border-radius:999px;
+  border:none;
+  font-size:16px;
+  transition:.4s;
+}
+
+input{
+  border:2px solid var(--accent);
+  margin-bottom:12px;
+}
+
+button{
+  background:var(--accent);
+  color:white;
+  font-weight:500;
+}
+
+button:hover{
+  transform:scale(1.05);
+  box-shadow:0 10px 25px rgba(255,143,177,.5);
+}
+
+/* PUZZLE */
+.board,.tray{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  margin-top:14px;
+}
+
+.slot{
+  aspect-ratio:1;
+  border:2px dashed var(--accent);
+  border-radius:16px;
+}
+
+.piece{
+  aspect-ratio:1;
+  background-size:400% 400%;
+  border-radius:16px;
+  cursor:pointer;
+  transition:.4s;
+}
+
+.selected{
+  transform:scale(1.08);
+  box-shadow:0 12px 30px rgba(255,143,177,.6);
+}
+
+/* MODALS */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0, 0, 0, 0.315);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  animation:fadeIn .6s ease;
+  z-index:10;
+}
+
+/* FULL PHOTO */
+.full-photo{
+  width:260px;
+  max-width:80vw;
+  border-radius:22px;
+  animation:photoReveal 1.2s ease;
+}
+@keyframes photoReveal{
+  0%{transform:scale(.6) rotate(-5deg);opacity:0}
+  100%{transform:scale(1);opacity:1}
+}
+
+/* LETTER */
+.letter{
+  font-size:15.5px;
+  line-height:1.9;
+  white-space:pre-line;
+  max-height:60vh;
+  overflow-y:auto;
+  padding-right:6px;
+  text-align:left;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* MOBILE POLISH */
+@media(max-width:420px){
+  h2,h3{font-size:26px}
+  .card{padding:20px}
+}
+</style>
+</head>
+
+<body>
+
+<div class="hearts" id="hearts"></div>
+
+<div class="container">
+
+  <div class="card" id="passwordScreen">
+    <h2>For You 💕</h2>
+    <input id="passwordInput" type="password" placeholder="Secret password">
+    <button id="unlockBtn">Unlock 💖</button>
+    <p id="error" style="color:#ff5f9e"></p>
+  </div>
+
+  <div class="card" id="musicScreen" style="display:none">
+    <h2>Our Song 🎶</h2>
+    <button id="musicBtn">Play Music 💗</button>
+    <button id="toPuzzle" style="margin-top:12px">Continue 💞</button>
+  </div>
+
+  <div class="card" id="puzzleScreen" style="display:none">
+    <h3>Put Us Together 🧩</h3>
+    <p id="progress">0 / 16 pieces 💕</p>
+    <div class="board" id="board"></div>
+    <div class="tray" id="tray"></div>
+  </div>
+
+</div>
+
+<!-- PHOTO MODAL -->
+<div class="modal" id="photoModal" style="display:none">
+  <div class="card">
+    <img src="photo.jpg" class="full-photo">
+  </div>
+</div>
+
+<!-- CONGRATS -->
+<div class="modal" id="completeModal" style="display:none">
+  <div class="card">
+    <h2>Yay! You Did It, Baby 💖</h2>
+    <button id="claimReward">Tap here for a surprise 🎁</button>
+  </div>
+</div>
+
+<!-- LETTER -->
+<div class="modal" id="letterModal" style="display:none">
+  <div class="card">
+    <div class="letter" id="letterText"></div>
+    <button id="restart" style="margin-top:16px; display:none">
+      Back 💕
+    </button>
+  </div>
+</div>
+
+<audio id="music" src="song.mp3" loop></audio>
+
+<script>
+const PASSWORD="babestar";
+const TOTAL=16;
+let placed=0, selected=null;
+
+const letter=`Hi, babe! ✨️
+
+Siguraduhin mong babasahin mo ang buong message na 'to dahil magku-quiz ako sa 'yo mamaya. 🙄
+
+Babi, no words can explain kung gaano ako ka-thankful na dumating ka. Kasi honestly, when we started talking hindi naman ako naghahanap ng taong mamahalin or magmamahal sa 'kin. Hindi ko naman ini-expect na magtatagal tayo knowing that when we had our first conversation, meron tayong usapan na hindi mo naman ako sinipot. 🥺 But I really believe that God is very intentional with the people na nilalagay niya sa buhay natin. That's why nang maging matagal na ang usapan natin and I started catching feelings for you, I immediately prayed and surrendered you to Him. Sabi ko if hindi ka rin naman lang magiging malaking part ng life ko, right that instant He can remove you na from my life. And actually babi meron akong binigay na deadline. Sabi ko, "Lord I'm giving you time to get rid of MJ and by the time na nandito pa rin siya even after sa deadline na in-agree natin, aangkinin ko na'to ha." And that's what I'm going to do.
+
+Baby, thank you for waiting for me and thank you for understanding me always. Alam kong marami tayong naging misunderstandings while we were getting to know each other at I'm glad na both tayo naging open and understanding during those times. Baby, I know that you're already aware kung gaano ako kahirap mahalin and I also want to say thank you for taking the time to understand me more and for handling my difficult attitude most of the time. Kulang ang thank you na words para sabihin ko kung gaano kita naa-appreciate palagi. Baby, LDR is really tough and will be tough. Hindi ko ini-expect na ang taong mamahalin ko nasa malayo honestly. 😭 But I know na ang distance temporary lang 'to, so sooner or later makakasama na rin naman natin ang isa't isa. Let's be patient, okie?
+
+Babe, handa na 'kong magpa-alaga sa 'yo. And kahit na abnoy ka, ready na rin akong intindihin ka just as much as you're also being patient in understanding my ka-OA-han. 🤣 Humanda ka na babe kasi wala ka nang kawala ngayon, hinding-hindi na kita bibitawan at bubugbugin kita ng lab everyday~ And since you already know me, bawal kang magreklamo kasi ilang beses kitang binigyan ng pagkakataon na umalis pero hindi ka umalis; ilang beses rin kitang tinanong kung handa ka na ba and sinabi mong ready-ng ready ka na kaya humanda ka talaga babe kasi wala nang bitawan 'to. If merong mapapagod, magpapahinga. Mag-aaway pero magbabati tayo, walang hiwalayang magaganap. You understand? 👀 Or else, kakadenahan talaga kita. Worse is bubutasan na lang kita sa tagiliran. ✨️
+
+Guess ano'ng pakulo 'to, boi? Tatandaan mo 'tong date na 'to ha: April 8, 2026. Kasi next year, anniversary na natin~ Yeheeey~ ✨️
+
+Yes, babe. I'm finally ready to be your girlfriend, and yes we're officially each other's person starting today. I love you, my Emjey~ 😘 Finally! Nasabi ko na rin ang magic words~ ✨️
+
+
+Forever your babe star,
+Sheena`;
+
+unlockBtn.onclick=()=>{
+  if(passwordInput.value===PASSWORD){
+    passwordScreen.style.display="none";
+    musicScreen.style.display="block";
+  } else {
+    error.textContent="Wrong password 💔";
+  }
+};
+
+musicBtn.onclick=()=>{
+  music.volume=0;
+  music.play();
+  let v=0;
+  const fade=setInterval(()=>{
+    v+=0.05;
+    music.volume=Math.min(v,1);
+    if(v>=1) clearInterval(fade);
+  },150);
+};
+
+toPuzzle.onclick=()=>{
+  musicScreen.style.display="none";
+  puzzleScreen.style.display="block";
+  initPuzzle();
+};
+
+function initPuzzle(){
+  board.innerHTML="";
+  tray.innerHTML="";
+  placed=0;
+  selected=null;
+  progress.textContent="0 / 16 pieces 💕";
+
+  for(let i=0;i<TOTAL;i++){
+    const s=document.createElement("div");
+    s.className="slot";
+    s.dataset.index=i;
+    s.onclick=()=>place(s);
+    board.appendChild(s);
+  }
+
+  [...Array(TOTAL).keys()].sort(()=>Math.random()-0.5).forEach(i=>{
+    const p=document.createElement("div");
+    p.className="piece";
+    p.dataset.index=i;
+    p.style.backgroundImage="url('photo.jpg')";
+    p.style.backgroundPosition=`${(i%4)*100/3}% ${Math.floor(i/4)*100/3}%`;
+    p.onclick=()=>{
+      document.querySelectorAll(".piece").forEach(x=>x.classList.remove("selected"));
+      selected=p;
+      p.classList.add("selected");
+    };
+    tray.appendChild(p);
+  });
+}
+
+function place(slot){
+  if(!selected) return;
+  if(slot.dataset.index===selected.dataset.index && !slot.firstChild){
+    slot.appendChild(selected);
+    selected.classList.remove("selected");
+    selected=null;
+    placed++;
+    progress.textContent=`${placed} / 16 pieces 💕`;
+
+    if(placed===TOTAL){
+      setTimeout(()=>{
+        photoModal.style.display="flex";
+        sparkles();
+        setTimeout(()=>{
+          photoModal.style.display="none";
+          completeModal.style.display="flex";
+        },2200);
+      },600);
+    }
+  }
+}
+
+claimReward.onclick=()=>{
+  completeModal.style.display="none";
+  letterModal.style.display="flex";
+  typeLetter();
+};
+
+restart.onclick=()=>{
+  letterModal.style.display="none";
+  completeModal.style.display="none";
+  photoModal.style.display="none";
+  puzzleScreen.style.display="none";
+  musicScreen.style.display="none";
+
+  passwordScreen.style.display="block";
+  passwordInput.value="";
+  error.textContent="";
+
+  board.innerHTML="";
+  tray.innerHTML="";
+  placed=0;
+  selected=null;
+  progress.textContent="0 / 16 pieces 💕";
+
+  music.pause();
+  music.currentTime=0;
+};
+
+/* TYPEWRITER */
+function typeLetter(){
+  letterText.textContent="";
+  restart.style.display="none";
+  let i=0;
+
+  const t=setInterval(()=>{
+    letterText.textContent+=letter[i];
+    letterText.scrollTop=letterText.scrollHeight;
+    i++;
+
+    if(i>=letter.length){
+      clearInterval(t);
+      restart.style.display="block";
+    }
+  },30);
+}
+
+/* SPARKLES */
+function sparkles(){
+  for(let i=0;i<30;i++){
+    const s=document.createElement("div");
+    s.className="sparkle";
+    s.textContent="✨";
+    s.style.left=Math.random()*100+"vw";
+    s.style.top="60vh";
+    document.body.appendChild(s);
+    setTimeout(()=>s.remove(),1200);
+  }
+}
+
+/* FLOATING HEARTS */
+setInterval(()=>{
+  const h=document.createElement("div");
+  h.className="heart";
+  h.textContent="💖";
+  h.style.left=Math.random()*100+"vw";
+  hearts.appendChild(h);
+  setTimeout(()=>h.remove(),14000);
+},900);
+</script>
+
+</body>
+</html>
